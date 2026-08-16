@@ -68,7 +68,7 @@
   .readout{font-family:'IBM Plex Mono',monospace;font-size:15px;padding:4px 2px 8px;border-bottom:1px dashed var(--ink-soft);color:var(--ink-soft);}
 
   /* ---------- Atividades (múltiplas) ---------- */
-  .atividade-row{display:grid;grid-template-columns:1.5fr .8fr 1.3fr 1fr 36px;border-bottom:1px solid var(--rule-soft);align-items:stretch;}
+  .atividade-row{display:grid;grid-template-columns:1.4fr 1.1fr 1.2fr 1fr 36px;border-bottom:1px solid var(--rule-soft);align-items:stretch;}
   .atividade-row:last-child{border-bottom:none;}
   @media (max-width:820px){ .atividade-row{grid-template-columns:1fr 1fr;} .atividade-row .field:nth-child(5){grid-column:1/-1;} }
   .atividade-row .field{border-left:1px solid var(--rule-soft);}
@@ -244,9 +244,9 @@
           <div class="hint">Soma de todas as atividades — define a faixa de cada anexo.</div>
         </div>
         <div class="field">
-          <label for="valor">Receita do mês a simular (R$, total da empresa)</label>
-          <input type="number" id="valor" value="50000" min="0" step="100">
-          <div class="hint">Será dividida entre as atividades abaixo, pelo % de cada uma.</div>
+          <label>Receita total do mês simulado</label>
+          <div class="readout" id="valorTotalOut">—</div>
+          <div class="hint">Soma automática do valor de cada atividade, informado na seção 2.</div>
         </div>
       </div>
     </div>
@@ -255,7 +255,7 @@
   <!-- 2. ATIVIDADES -->
   <section>
     <div class="section-head"><span class="section-num">2</span><h2>Atividades da empresa</h2></div>
-    <p class="section-sub">Empresas com mais de uma atividade (ex.: comércio + serviço) são calculadas separadamente — cada uma com seu anexo, alíquota efetiva e potencial de crédito no híbrido.</p>
+    <p class="section-sub">Empresas com mais de uma atividade (ex.: comércio + serviço) são calculadas separadamente — cada uma com seu anexo, valor de receita, alíquota efetiva e potencial de crédito no híbrido.</p>
     <div class="ledger atividades-wrap">
       <div id="atividadesContainer"></div>
       <div class="atividades-foot">
@@ -398,7 +398,7 @@
   };
 
   const el = id => document.getElementById(id);
-  const rbt12=el('rbt12'), valor=el('valor');
+  const rbt12=el('rbt12'), valorTotalOut=el('valorTotalOut');
   const cbsRef=el('cbsRef'), ibsRef=el('ibsRef'), anoIbs=el('anoIbs');
   const atividadesContainer=el('atividadesContainer'), addAtividadeBtn=el('addAtividade'), somaInfo=el('somaInfo');
   const ano=el('ano'), stamp=el('stamp'), stampYear=el('stampYear'), phaseCaption=el('phaseCaption');
@@ -449,7 +449,7 @@
     rows.forEach(r=>{ r.querySelector('.af-remove').disabled = rows.length<=1; });
   }
 
-  function criarLinhaAtividade({anexo='I', pct=100, setor='0', insumos=20}={}){
+  function criarLinhaAtividade({anexo='I', valor=0, setor='0', insumos=20}={}){
     const row = document.createElement('div');
     row.className = 'atividade-row';
     row.innerHTML = `
@@ -459,8 +459,8 @@
         <div class="af-caption"></div>
       </div>
       <div class="field">
-        <label>% da receita</label>
-        <input type="number" class="af-pct" value="${pct}" min="0" max="100" step="1">
+        <label>Receita no mês (R$)</label>
+        <input type="number" class="af-valor" value="${valor}" min="0" step="100">
       </div>
       <div class="field">
         <label>Setor (redução CBS/IBS)</label>
@@ -488,7 +488,7 @@
   function lerAtividades(){
     return Array.from(atividadesContainer.querySelectorAll('.atividade-row')).map(row=>({
       anexo: row.querySelector('.af-anexo').value,
-      pct: parseFloat(row.querySelector('.af-pct').value)||0,
+      valor: parseFloat(row.querySelector('.af-valor').value)||0,
       setor: parseFloat(row.querySelector('.af-setor').value)||0,
       insumos: parseFloat(row.querySelector('.af-insumos').value)||0,
       _caption: row.querySelector('.af-caption')
@@ -496,7 +496,7 @@
   }
 
   addAtividadeBtn.addEventListener('click', ()=>{
-    atividadesContainer.appendChild(criarLinhaAtividade({anexo:'I', pct:0, setor:'0', insumos:20}));
+    atividadesContainer.appendChild(criarLinhaAtividade({anexo:'I', valor:0, setor:'0', insumos:20}));
     atualizarBotoesRemover();
     recalcular();
   });
@@ -526,13 +526,12 @@
   }
 
   function computeEmpresaAno(y, atividades, ctx){
-    const {rbtV, valorV, cbsV, ibsV, anoIbsStart} = ctx;
-    const somaPct = atividades.reduce((s,a)=>s+a.pct,0) || 1;
-    const agr = {dasValor:0, parcelaPC:0, parcelaICMS:0, parcelaISS:0, parcelaResto:0, dasHibrido:0, cbsBruto:0, ibsBruto:0, cbsLiquido:0, ibsLiquido:0, totalHibrido:0, creditoAoCliente:0, detalhes:[]};
+    const {rbtV, cbsV, ibsV, anoIbsStart} = ctx;
+    const agr = {dasValor:0, parcelaPC:0, parcelaICMS:0, parcelaISS:0, parcelaResto:0, dasHibrido:0, cbsBruto:0, ibsBruto:0, cbsLiquido:0, ibsLiquido:0, totalHibrido:0, creditoAoCliente:0, valorTotal:0, detalhes:[]};
     atividades.forEach(at=>{
-      const pesoNormalizado = at.pct/somaPct;
-      const receitaAtividade = valorV * pesoNormalizado;
+      const receitaAtividade = at.valor;
       const r = computeAtividadeAno(at.anexo, rbtV, receitaAtividade, at.setor, at.insumos, y, cbsV, ibsV, anoIbsStart);
+      agr.valorTotal += receitaAtividade;
       agr.dasValor += r.dasValor;
       agr.parcelaPC += r.parcelaPC;
       if(r.tipo==='ICMS') agr.parcelaICMS += r.parcelaConsumo; else agr.parcelaISS += r.parcelaConsumo;
@@ -575,23 +574,23 @@
 
   function recalcular(){
     const rbtV = parseFloat(rbt12.value)||0;
-    const valorV = parseFloat(valor.value)||0;
     const cbsV = parseFloat(cbsRef.value)||0;
     const ibsV = parseFloat(ibsRef.value)||0;
     const anoIbsStart = parseInt(anoIbs.value,10)||2029;
     const y = parseInt(ano.value,10);
 
     const atividades = lerAtividades();
-    const somaPct = atividades.reduce((s,a)=>s+a.pct,0);
-    somaInfo.textContent = `Total das atividades: ${somaPct.toFixed(0)}%` + (Math.abs(somaPct-100)>0.5 ? ' — diferente de 100%, normalizado automaticamente nos cálculos.' : ' ✓');
-    somaInfo.className = 'soma-info' + (Math.abs(somaPct-100)>0.5 ? ' warn' : '');
+    const valorV = atividades.reduce((s,a)=>s+a.valor,0);
+    valorTotalOut.textContent = fmtBRL(valorV);
+    somaInfo.textContent = atividades.length>1 ? `${atividades.length} atividades somando ${fmtBRL(valorV)}` : '';
+    somaInfo.className = 'soma-info';
 
-    const ctx = {rbtV, valorV, cbsV, ibsV, anoIbsStart};
+    const ctx = {rbtV, cbsV, ibsV, anoIbsStart};
     const r = computeEmpresaAno(y, atividades, ctx);
 
     // legendas por atividade (alíquota efetiva de cada uma)
     r.detalhes.forEach(d=>{
-      if(d._caption) d._caption.textContent = `Alíquota efetiva: ${fmtPct(d.efetiva)} · Tributo: ${d.tipo} · Receita no mês: ${fmtBRL(d.receitaAtividade)}`;
+      if(d._caption) d._caption.textContent = `Alíquota efetiva: ${fmtPct(d.efetiva)} · Tributo: ${d.tipo}`;
     });
 
     const phase = phaseInfo(y, anoIbsStart);
@@ -649,14 +648,14 @@
     }
   }
 
-  [rbt12, valor, cbsRef, ibsRef, anoIbs, ano].forEach(n=>{
+  [rbt12, cbsRef, ibsRef, anoIbs, ano].forEach(n=>{
     n.addEventListener('input', recalcular);
     n.addEventListener('change', recalcular);
   });
 
   // atividades iniciais: comércio (mais crédito) + serviço (menos crédito)
-  atividadesContainer.appendChild(criarLinhaAtividade({anexo:'I', pct:60, setor:'0', insumos:35}));
-  atividadesContainer.appendChild(criarLinhaAtividade({anexo:'III', pct:40, setor:'0', insumos:10}));
+  atividadesContainer.appendChild(criarLinhaAtividade({anexo:'I', valor:30000, setor:'0', insumos:35}));
+  atividadesContainer.appendChild(criarLinhaAtividade({anexo:'III', valor:20000, setor:'0', insumos:10}));
   atualizarBotoesRemover();
 
   buildChart();
@@ -669,8 +668,9 @@
     const agora = new Date();
     const dataStr = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     const atividades = lerAtividades();
-    const resumoAtividades = atividades.map(a=>`${ANEXOS[a.anexo].label.replace(/^Anexo [IV]+ — /,'')} (${a.pct}%)`).join(' + ');
-    printMeta.innerHTML = `Impresso em ${dataStr} · ${resumoAtividades} · RBT12: ${fmtBRL(parseFloat(rbt12.value)||0)} · Receita do mês: ${fmtBRL(parseFloat(valor.value)||0)} · Ano simulado: ${ano.value} · Simulação de caráter educativo — não é orientação contábil, fiscal ou jurídica.`;
+    const valorTotal = atividades.reduce((s,a)=>s+a.valor,0);
+    const resumoAtividades = atividades.map(a=>`${ANEXOS[a.anexo].label.replace(/^Anexo [IV]+ — /,'')} (${fmtBRL(a.valor)})`).join(' + ');
+    printMeta.innerHTML = `Impresso em ${dataStr} · ${resumoAtividades} · RBT12: ${fmtBRL(parseFloat(rbt12.value)||0)} · Receita do mês: ${fmtBRL(valorTotal)} · Ano simulado: ${ano.value} · Simulação de caráter educativo — não é orientação contábil, fiscal ou jurídica.`;
   }
   printBtn.addEventListener('click', ()=>{ montarResumoImpressao(); window.print(); });
   window.addEventListener('beforeprint', montarResumoImpressao);
