@@ -111,6 +111,13 @@
   .regime-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);}
   .big-number{font-family:'Sora',sans-serif;font-size:clamp(30px,4.4vw,42px);font-weight:800;margin:6px 0 4px;line-height:1;}
   .mini-line{font-size:13px;color:var(--ink-soft);margin-top:10px;}
+  .credit-badge{
+    display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px 14px;
+    margin-top:18px;padding:14px 16px;
+    background:var(--brand-green-soft);border:1px solid var(--brand-green);border-radius:8px;
+  }
+  .credit-badge .credit-label{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-green);}
+  .credit-badge .credit-value{font-family:'Sora',sans-serif;font-weight:800;font-size:26px;color:var(--brand-green);}
   table.breakdown{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:13px;margin-top:14px;}
   table.breakdown th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:500;padding:6px 4px 8px;border-bottom:1px solid var(--ink);}
   table.breakdown td{padding:7px 4px;border-bottom:1px solid var(--rule-soft);}
@@ -124,6 +131,7 @@
   .decision-note strong{color:var(--ink);}
   .chart-box{background:rgba(255,255,255,.55);border:1px solid var(--rule);border-radius:var(--radius);padding:20px;}
   .legend-row{display:flex;gap:22px;flex-wrap:wrap;margin-top:14px;font-size:12.5px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+  .chart-note{font-size:12px;color:var(--ink-soft);margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-soft);line-height:1.5;}
   .legend-row span{display:inline-flex;align-items:center;gap:6px;}
   .legend-swatch{width:14px;height:3px;display:inline-block;}
   .legend-swatch.dashed{border-top:2px dashed var(--gold);background:none;height:0;}
@@ -199,10 +207,14 @@
     .verdict{padding:6px 10px;margin-top:8px;font-size:9.5px;break-inside:avoid;page-break-inside:avoid;}
     .verdict strong{font-size:12px;margin-bottom:2px;}
     .decision-note{font-size:8px;margin-top:5px;}
+    .credit-badge{padding:6px 8px;margin-top:8px;gap:2px 8px;}
+    .credit-badge .credit-label{font-size:7px;}
+    .credit-badge .credit-value{font-size:14px;}
 
     .chart-box{padding:8px;}
     #chart{max-height:170px !important;}
     .legend-row{font-size:8px;margin-top:6px;gap:10px;}
+    .chart-note{font-size:7px;margin-top:6px;padding-top:6px;}
 
     .glossary-print{font-size:8.5px;color:var(--ink-soft);margin:4px 0;padding:0;}
     .glossary-print strong{color:var(--ink);}
@@ -326,7 +338,10 @@
           <thead><tr><th>Composição do DAS</th><th class="num">R$</th></tr></thead>
           <tbody id="puroBody"></tbody>
         </table>
-        <div class="mini-line" id="creditoClientePuro"></div>
+        <div class="credit-badge">
+          <span class="credit-label">Crédito repassável ao cliente</span>
+          <span class="credit-value" id="creditoClientePuro">—</span>
+        </div>
       </div>
       <div class="regime-card hibrido">
         <div class="regime-label">Regime híbrido — CBS/IBS por fora, com crédito</div>
@@ -336,7 +351,10 @@
           <thead><tr><th>Tributo</th><th class="num">R$</th></tr></thead>
           <tbody id="hibridoBody"></tbody>
         </table>
-        <div class="mini-line" id="creditoCliente"></div>
+        <div class="credit-badge">
+          <span class="credit-label">Crédito repassável ao cliente</span>
+          <span class="credit-value" id="creditoCliente">—</span>
+        </div>
       </div>
     </div>
     <div class="verdict" id="verdict"></div>
@@ -346,14 +364,15 @@
   <!-- 6. EVOLUÇÃO -->
   <section>
     <div class="section-head"><span class="section-num">6</span><h2>Evolução 2025 → 2033</h2></div>
-    <p class="section-sub">O puro fica em linha reta — só o híbrido muda de fase.</p>
+    <p class="section-sub">O puro fica em linha reta — só o híbrido muda de fase. Em 2033 o IBS pula de 40% para 100% num único ano (cronograma oficial), por isso o salto brusco no fim do gráfico.</p>
     <div class="chart-box">
       <canvas id="chart" height="110"></canvas>
       <div class="legend-row">
         <span><span class="legend-swatch" style="background:#00283C"></span>Regime puro</span>
         <span><span class="legend-swatch" style="background:#1E6FBA"></span>Regime híbrido (líquido a pagar)</span>
-        <span><span class="legend-swatch dashed"></span>Crédito repassado ao cliente</span>
+        <span><span class="legend-swatch dashed"></span>Crédito repassável ao cliente</span>
       </div>
+      <p class="chart-note">O "líquido a pagar" já desconta o crédito que a empresa toma sobre suas próprias compras. Já o "crédito repassável ao cliente" é o CBS/IBS cheio destacado na venda, sem esse desconto — por isso os dois valores não precisam bater entre si, mesmo quando ficam próximos.</p>
     </div>
   </section>
 
@@ -361,7 +380,7 @@
   <section class="no-print">
     <div class="section-head"><span class="section-num">7</span><h2>Glossário rápido</h2></div>
     <dl class="glossary">
-      <div class="gterm"><dt>Regime híbrido</dt><dd>Optante do Simples recolhe IBS/CBS "por fora" do DAS, pelas regras do regime regular — gera crédito pleno ao cliente (ou reduzido, se comprou de fornecedor no Simples puro).</dd></div>
+      <div class="gterm"><dt>Regime híbrido</dt><dd>Optante do Simples recolhe IBS/CBS "por fora" do DAS, pelas regras do regime regular — repassa ao cliente o CBS/IBS cheio destacado na venda, independente do crédito que a própria empresa consegue sobre suas compras.</dd></div>
       <div class="gterm"><dt>RBT12</dt><dd>Receita bruta acumulada nos 12 meses anteriores — define a faixa e a alíquota nominal.</dd></div>
       <div class="gterm"><dt>Alíquota efetiva</dt><dd>(RBT12 × alíquota nominal − parcela a deduzir) ÷ RBT12. É o percentual realmente pago, sempre menor que a nominal.</dd></div>
       <div class="gterm"><dt>Fator R</dt><dd>Relação entre folha de pagamento e receita nos últimos 12 meses — decide entre Anexo III (≥28%) ou V (&lt;28%).</dd></div>
@@ -606,7 +625,10 @@
       agr.detalhes.push({...at, ...r});
     });
     agr.totalHibrido = agr.dasHibrido + agr.cbsLiquido + agr.ibsLiquido;
-    agr.creditoAoCliente = agr.cbsLiquido + agr.ibsLiquido;
+    // crédito repassado ao cliente = CBS/IBS destacado (bruto) na operação de venda,
+    // independente do quanto a empresa credita/recolhe líquido sobre as próprias compras —
+    // são cálculos separados na cadeia de não cumulatividade
+    agr.creditoAoCliente = agr.cbsBruto + agr.ibsBruto;
     return agr;
   }
 
@@ -669,7 +691,7 @@
     puroRows += `<tr><td>IRPJ, CSLL, CPP (e IPI)</td><td class="num">${fmtBRL(r.parcelaResto)}</td></tr>`;
     puroRows += `<tr class="total"><td>Total DAS</td><td class="num">${fmtBRL(r.dasValor)}</td></tr>`;
     puroBody.innerHTML = puroRows;
-    creditoClientePuro.textContent = `Crédito de CBS/IBS repassável ao cliente (proporcional, embutido no DAS): ${fmtBRL(r.creditoAoClientePuro)}.`;
+    creditoClientePuro.textContent = fmtBRL(r.creditoAoClientePuro);
 
     // Híbrido
     hibridoTotal.textContent = fmtBRL(r.totalHibrido);
@@ -679,7 +701,7 @@
       <tr><td>CBS (bruto ${fmtBRL(r.cbsBruto)} − crédito ${fmtBRL(r.creditoCBS)})</td><td class="num">${fmtBRL(r.cbsLiquido)}</td></tr>
       <tr><td>IBS (bruto ${fmtBRL(r.ibsBruto)} − crédito ${fmtBRL(r.creditoIBS)})</td><td class="num">${fmtBRL(r.ibsLiquido)}</td></tr>
       <tr class="total"><td>Total híbrido</td><td class="num">${fmtBRL(r.totalHibrido)}</td></tr>`;
-    creditoCliente.textContent = `Crédito de CBS/IBS repassado ao cliente: ${fmtBRL(r.creditoAoCliente)}.`;
+    creditoCliente.textContent = fmtBRL(r.creditoAoCliente);
 
     // Verdict
     const diff = r.dasValor - r.totalHibrido; // positive = hibrido cheaper
