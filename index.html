@@ -552,12 +552,12 @@
     const ibsLiquido = Math.max(0, ibsBruto-creditoIBS);
     const totalHibrido = dasHibrido + cbsLiquido + ibsLiquido;
 
-    return {tipo:a.tipo, efetiva, receitaAtividade, dasValor, parcelaPC, parcelaConsumo, parcelaResto, dasHibrido, cbsBruto, ibsBruto, cbsLiquido, ibsLiquido, totalHibrido, creditoAoClientePuro};
+    return {tipo:a.tipo, efetiva, receitaAtividade, dasValor, parcelaPC, parcelaConsumo, parcelaResto, dasHibrido, cbsBruto, ibsBruto, creditoCBS, creditoIBS, cbsLiquido, ibsLiquido, totalHibrido, creditoAoClientePuro};
   }
 
   function computeEmpresaAno(y, atividades, ctx){
     const {rbtV, cbsV, ibsV, anoIbsStart} = ctx;
-    const agr = {dasValor:0, parcelaPC:0, parcelaICMS:0, parcelaISS:0, parcelaResto:0, dasHibrido:0, cbsBruto:0, ibsBruto:0, cbsLiquido:0, ibsLiquido:0, totalHibrido:0, creditoAoCliente:0, creditoAoClientePuro:0, valorTotal:0, detalhes:[]};
+    const agr = {dasValor:0, parcelaPC:0, parcelaICMS:0, parcelaISS:0, parcelaResto:0, dasHibrido:0, cbsBruto:0, ibsBruto:0, creditoCBS:0, creditoIBS:0, cbsLiquido:0, ibsLiquido:0, totalHibrido:0, creditoAoCliente:0, creditoAoClientePuro:0, valorTotal:0, detalhes:[]};
     atividades.forEach(at=>{
       const receitaAtividade = at.valor;
       const r = computeAtividadeAno(at.anexo, rbtV, receitaAtividade, at.setor, at.insumos, at.fornecedorHibrido, y, cbsV, ibsV, anoIbsStart);
@@ -569,6 +569,8 @@
       agr.dasHibrido += r.dasHibrido;
       agr.cbsBruto += r.cbsBruto;
       agr.ibsBruto += r.ibsBruto;
+      agr.creditoCBS += r.creditoCBS;
+      agr.creditoIBS += r.creditoIBS;
       agr.cbsLiquido += r.cbsLiquido;
       agr.ibsLiquido += r.ibsLiquido;
       agr.creditoAoClientePuro += r.creditoAoClientePuro;
@@ -645,8 +647,8 @@
     hibridoPct.textContent = `Equivale a ${(r.totalHibrido/valorV*100 || 0).toFixed(2)}% da receita do mês.`;
     hibridoBody.innerHTML = `
       <tr><td>DAS remanescente</td><td class="num">${fmtBRL(r.dasHibrido)}</td></tr>
-      <tr><td>CBS (bruto ${fmtBRL(r.cbsBruto)} − crédito)</td><td class="num">${fmtBRL(r.cbsLiquido)}</td></tr>
-      <tr><td>IBS (bruto ${fmtBRL(r.ibsBruto)} − crédito)</td><td class="num">${fmtBRL(r.ibsLiquido)}</td></tr>
+      <tr><td>CBS (bruto ${fmtBRL(r.cbsBruto)} − crédito ${fmtBRL(r.creditoCBS)})</td><td class="num">${fmtBRL(r.cbsLiquido)}</td></tr>
+      <tr><td>IBS (bruto ${fmtBRL(r.ibsBruto)} − crédito ${fmtBRL(r.creditoIBS)})</td><td class="num">${fmtBRL(r.ibsLiquido)}</td></tr>
       <tr class="total"><td>Total híbrido</td><td class="num">${fmtBRL(r.totalHibrido)}</td></tr>`;
     creditoCliente.textContent = `Crédito de CBS/IBS repassado ao cliente: ${fmtBRL(r.creditoAoCliente)}.`;
 
