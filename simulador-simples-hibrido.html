@@ -66,11 +66,15 @@
   input:focus-visible,select:focus-visible{outline:2px solid var(--brand-green);outline-offset:2px;}
   select{cursor:pointer;}
   .readout{font-family:'IBM Plex Mono',monospace;font-size:15px;padding:4px 2px 8px;border-bottom:1px dashed var(--ink-soft);color:var(--ink-soft);}
+  .currency-wrap{display:flex;align-items:baseline;gap:6px;border-bottom:1px solid var(--ink);}
+  .currency-wrap .currency-prefix{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink-soft);padding-bottom:8px;}
+  .currency-wrap input{border-bottom:none;flex:1;min-width:0;}
 
   /* ---------- Atividades (múltiplas) ---------- */
   .atividade-block{border-bottom:2px solid var(--rule);}
   .atividade-block:last-child{border-bottom:none;}
   .atividade-subrow{display:grid;grid-template-columns:1.3fr 1fr 1.2fr;border-bottom:1px solid var(--rule-soft);}
+  .atividade-subrow.atividade-subrow-2{grid-template-columns:1.4fr 1fr;}
   @media (max-width:760px){ .atividade-subrow{grid-template-columns:1fr 1fr;} }
   .atividade-subrow .field{border-left:1px solid var(--rule-soft);}
   .atividade-subrow .field:first-child{border-left:none;}
@@ -243,7 +247,10 @@
       <div class="ledger-row">
         <div class="field">
           <label for="rbt12">Receita bruta últimos 12 meses — RBT12 (R$)</label>
-          <input type="number" id="rbt12" value="600000" min="0" step="1000">
+          <div class="currency-wrap">
+            <span class="currency-prefix">R$</span>
+            <input type="text" inputmode="decimal" id="rbt12" value="600000">
+          </div>
           <div class="hint">Soma de todas as atividades — define a faixa de cada anexo.</div>
         </div>
         <div class="field">
@@ -258,7 +265,7 @@
   <!-- 2. ATIVIDADES -->
   <section>
     <div class="section-head"><span class="section-num">2</span><h2>Atividades da empresa</h2></div>
-    <p class="section-sub">Empresas com mais de uma atividade (ex.: comércio + serviço) são calculadas separadamente — cada uma com seu anexo, valor de receita, alíquota efetiva, e o quanto dos insumos vem de fornecedores em regime regular (crédito pleno) ou Simples puro (crédito reduzido).</p>
+    <p class="section-sub">Empresas com mais de uma atividade (ex.: comércio + serviço) são calculadas separadamente — cada uma com seu anexo, valor de receita, alíquota efetiva, e quanto dos insumos com potencial de crédito vem de fornecedores no regime híbrido (geram crédito) ou no regime puro (não geram crédito no híbrido).</p>
     <div class="ledger atividades-wrap">
       <div id="atividadesContainer"></div>
       <div class="atividades-foot">
@@ -286,17 +293,6 @@
           <label for="anoIbs">Ano em que o ICMS/ISS começa a sair do DAS</label>
           <input type="number" id="anoIbs" value="2029" min="2027" max="2032" step="1">
           <div class="hint">Oficial: 2029–2033. PIS/COFINS vira CBS a partir de 2027 (fixo).</div>
-        </div>
-      </div>
-      <div class="ledger-row">
-        <div class="field">
-          <label for="fatorSimplesPuro">Crédito de fornecedores do Simples puro (% da alíquota cheia)</label>
-          <input type="number" id="fatorSimplesPuro" value="30" min="0" max="100" step="1">
-          <div class="hint">Fornecedor no Simples puro repassa só a parte de CBS/IBS embutida no DAS, não a alíquota cheia — ajuste essa estimativa conforme seus fornecedores reais. Regulamentação do CGSN ainda pendente.</div>
-        </div>
-        <div class="field">
-          <label>Como funciona o crédito por atividade</label>
-          <div class="hint" style="margin-top:8px;">Em cada atividade (seção 2), o % de fornecedores em regime regular define quanto do crédito de insumos é pleno; o restante usa o fator ao lado.</div>
         </div>
       </div>
     </div>
@@ -370,7 +366,7 @@
       <div class="gterm"><dt>Crédito no Simples puro</dt><dd>Mesmo sem sair do DAS, o optante pode repassar crédito ao cliente — mas só a parte de CBS/IBS já embutida no DAS, bem menor que o crédito pleno do híbrido.</dd></div>
       <div class="gterm"><dt>Split payment</dt><dd>Segregação automática do tributo no momento do pagamento da operação.</dd></div>
     </dl>
-    <p class="gterm-extra">O crédito que o híbrido consegue tomar sobre compras também depende do fornecedor: pleno se ele é do regime regular, reduzido (fator ajustável na seção 3) se ele é optante do Simples puro.</p>
+    <p class="gterm-extra">O crédito que o híbrido consegue tomar sobre compras depende do fornecedor: pleno se ele está no regime híbrido, e — por simplificação — zero se está no regime puro (na prática esse fornecedor também repassa algo, mas o valor depende do DAS dele e não é mensurável por quem compra). Os dois percentuais (insumos com potencial de crédito e fatia de fornecedor híbrido) são ajustáveis por atividade, na seção 2.</p>
     
   </section>
 
@@ -379,7 +375,7 @@
   </p>
 
   <div class="disclaimer">
-    <strong>Este simulador não substitui orientação profissional.</strong> É uma ferramenta educativa e simplificada, construída a partir da LC 123/2006, da EC 132/2023 e da LC 214/2025, com fins de estudo e ilustração. As tabelas do Simples (Anexos I a V) usam a estrutura oficial; os percentuais de composição do DAS usam a 1ª faixa como referência — ajuste-os se tiver o detalhamento exato do PGDAS-D. As alíquotas de referência de CBS/IBS ainda dependem de resolução do Senado. O CGSN ainda deve editar normas complementares detalhando a operacionalização do regime híbrido, inclusive o cálculo exato do crédito repassável por optantes do Simples puro e o tratamento do crédito conforme o regime do fornecedor — os fatores usados aqui são estimativas ajustáveis, não os percentuais oficiais. O ano de início da migração do ICMS/ISS para o IBS segue o cronograma nacional (2029–2033) e é ajustável no simulador.<br><br>
+    <strong>Este simulador não substitui orientação profissional.</strong> É uma ferramenta educativa e simplificada, construída a partir da LC 123/2006, da EC 132/2023 e da LC 214/2025, com fins de estudo e ilustração. As tabelas do Simples (Anexos I a V) usam a estrutura oficial; os percentuais de composição do DAS usam a 1ª faixa como referência — ajuste-os se tiver o detalhamento exato do PGDAS-D. As alíquotas de referência de CBS/IBS ainda dependem de resolução do Senado. O CGSN ainda deve editar normas complementares detalhando a operacionalização do regime híbrido, inclusive o cálculo exato do crédito repassável por optantes do Simples puro. Fornecedores no regime puro também repassam algum crédito ao comprador (proporcional ao CBS/IBS embutido no próprio DAS deles), mas esse valor depende de dados do fornecedor que o comprador normalmente não tem acesso (faturamento, anexo, faixa) — por isso o simulador trata esse crédito, de forma conservadora, como zero nas compras de fornecedores em regime puro. O ano de início da migração do ICMS/ISS para o IBS segue o cronograma nacional (2029–2033) e é ajustável no simulador.<br><br>
     Os resultados apresentados são estimativas e <strong>não constituem recomendação, garantia ou orientação contábil, fiscal ou jurídica</strong>. A decisão de manter-se no Simples puro ou migrar para o regime híbrido é de <strong>exclusiva responsabilidade do gestor da empresa</strong>, e deve ser tomada com o apoio de um contador habilitado, considerando a realidade específica do negócio.
   </div>
 
@@ -416,7 +412,7 @@
 
   const el = id => document.getElementById(id);
   const rbt12=el('rbt12'), valorTotalOut=el('valorTotalOut');
-  const cbsRef=el('cbsRef'), ibsRef=el('ibsRef'), anoIbs=el('anoIbs'), fatorSimplesPuro=el('fatorSimplesPuro');
+  const cbsRef=el('cbsRef'), ibsRef=el('ibsRef'), anoIbs=el('anoIbs');
   const atividadesContainer=el('atividadesContainer'), addAtividadeBtn=el('addAtividade'), somaInfo=el('somaInfo');
   const ano=el('ano'), stamp=el('stamp'), stampYear=el('stampYear'), phaseCaption=el('phaseCaption');
   const puroTotal=el('puroTotal'), puroPct=el('puroPct'), puroBody=el('puroBody'), creditoClientePuro=el('creditoClientePuro');
@@ -425,6 +421,23 @@
 
   function fmtPct(v){ return v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'; }
   function fmtBRL(v){ return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+
+  // ---- campos monetários (RBT12, receita por atividade): texto com máscara pt-BR ----
+  function parseBRNumber(str){
+    if(!str) return 0;
+    let s = String(str).replace(/[^\d,.-]/g,'');
+    s = s.replace(/\./g,'').replace(',', '.');
+    const v = parseFloat(s);
+    return isNaN(v) ? 0 : v;
+  }
+  function formatBRNumber(v){
+    return (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  function attachCurrencyMask(input){
+    input.value = formatBRNumber(parseBRNumber(input.value));
+    input.addEventListener('blur', ()=>{ input.value = formatBRNumber(parseBRNumber(input.value)); });
+    input.addEventListener('focus', ()=>{ input.select(); });
+  }
 
   function faixaInfo(anexoKey, rbt){
     const a = ANEXOS[anexoKey];
@@ -466,7 +479,7 @@
     blocks.forEach(b=>{ b.querySelector('.af-remove').disabled = blocks.length<=1; });
   }
 
-  function criarLinhaAtividade({anexo='I', valor=0, setor='0', insumos=20, fornecedorRegular=70}={}){
+  function criarLinhaAtividade({anexo='I', valor=0, setor='0', insumos=30, fornecedorHibrido=50}={}){
     const block = document.createElement('div');
     block.className = 'atividade-block';
     block.innerHTML = `
@@ -477,7 +490,10 @@
         </div>
         <div class="field">
           <label>Receita no mês (R$)</label>
-          <input type="number" class="af-valor" value="${valor}" min="0" step="100">
+          <div class="currency-wrap">
+            <span class="currency-prefix">R$</span>
+            <input type="text" inputmode="decimal" class="af-valor" value="${valor}">
+          </div>
         </div>
         <div class="field">
           <label>Setor (redução CBS/IBS)</label>
@@ -486,12 +502,13 @@
       </div>
       <div class="atividade-subrow">
         <div class="field">
-          <label>% insumos tributados (crédito)</label>
+          <label>% insumos possíveis de crédito (sobre a receita)</label>
           <input type="number" class="af-insumos" value="${insumos}" min="0" max="100" step="1">
         </div>
         <div class="field">
-          <label>Fornecedores em regime regular (%)</label>
-          <input type="number" class="af-fornecedor" value="${fornecedorRegular}" min="0" max="100" step="1">
+          <label>Desse %, quanto é fornecedor regime híbrido</label>
+          <input type="number" class="af-fornecedor" value="${fornecedorHibrido}" min="0" max="100" step="1">
+          <div class="hint">O restante desse % é fornecedor regime puro. Ele também repassa algum crédito na prática (proporcional ao que pagou de CBS/IBS dentro do próprio DAS), mas esse valor depende do DAS do fornecedor e não é visível para quem compra — por isso o simulador considera esse crédito como zero, de forma conservadora.</div>
         </div>
         <div class="field af-caption-field">
           <div class="af-caption"></div>
@@ -500,6 +517,7 @@
       </div>`;
     block.querySelector('.af-anexo').value = anexo;
     block.querySelector('.af-setor').value = setor;
+    attachCurrencyMask(block.querySelector('.af-valor'));
     block.querySelectorAll('input,select').forEach(elm=>{
       elm.addEventListener('input', recalcular);
       elm.addEventListener('change', recalcular);
@@ -515,21 +533,21 @@
   function lerAtividades(){
     return Array.from(atividadesContainer.querySelectorAll('.atividade-block')).map(block=>({
       anexo: block.querySelector('.af-anexo').value,
-      valor: parseFloat(block.querySelector('.af-valor').value)||0,
+      valor: parseBRNumber(block.querySelector('.af-valor').value),
       setor: parseFloat(block.querySelector('.af-setor').value)||0,
       insumos: parseFloat(block.querySelector('.af-insumos').value)||0,
-      fornecedorRegular: parseFloat(block.querySelector('.af-fornecedor').value)||0,
+      fornecedorHibrido: parseFloat(block.querySelector('.af-fornecedor').value)||0,
       _caption: block.querySelector('.af-caption')
     }));
   }
 
   addAtividadeBtn.addEventListener('click', ()=>{
-    atividadesContainer.appendChild(criarLinhaAtividade({anexo:'I', valor:0, setor:'0', insumos:20, fornecedorRegular:70}));
+    atividadesContainer.appendChild(criarLinhaAtividade({anexo:'I', valor:0, setor:'0', insumos:30, fornecedorHibrido:50}));
     atualizarBotoesRemover();
     recalcular();
   });
 
-  function computeAtividadeAno(anexoKey, rbt, receitaAtividade, reducao, insumosPct, fornecedorRegularPct, fatorSimplesPuroPct, y, cbsV, ibsV, anoIbsStart){
+  function computeAtividadeAno(anexoKey, rbt, receitaAtividade, reducao, insumosPct, fornecedorHibridoPct, y, cbsV, ibsV, anoIbsStart){
     const a = ANEXOS[anexoKey];
     const f = faixaInfo(anexoKey, rbt);
     const efetiva = aliquotaEfetiva(rbt, f[1], f[2]);
@@ -548,26 +566,28 @@
     const creditoIBSPuro = parcelaConsumo * ibsFrac;
     const creditoAoClientePuro = creditoCBSPuro + creditoIBSPuro;
 
-    // crédito que ESTA atividade, no HÍBRIDO, consegue tomar sobre os insumos comprados —
-    // depende do regime do fornecedor: pleno se regular, reduzido se Simples puro
-    const fatorMedioCredito = (fornecedorRegularPct/100)*1 + (1-fornecedorRegularPct/100)*(fatorSimplesPuroPct/100);
+    // crédito que ESTA atividade, no HÍBRIDO, consegue tomar sobre os insumos comprados:
+    // insumosPct = % da receita gasta em insumos possíveis de crédito;
+    // fornecedorHibridoPct = desse valor, quanto veio de fornecedor no regime híbrido (gera crédito) —
+    // o restante veio de fornecedor no regime puro (não gera crédito)
+    const baseCredito = insumosPct/100 * fornecedorHibridoPct/100;
     const cbsBruto = receitaAtividade*(cbsV/100)*(1-reducao)*cbsFrac;
     const ibsBruto = receitaAtividade*(ibsV/100)*(1-reducao)*ibsFrac;
-    const creditoCBS = receitaAtividade*(insumosPct/100)*(cbsV/100)*cbsFrac*fatorMedioCredito;
-    const creditoIBS = receitaAtividade*(insumosPct/100)*(ibsV/100)*ibsFrac*fatorMedioCredito;
+    const creditoCBS = receitaAtividade*baseCredito*(cbsV/100)*cbsFrac;
+    const creditoIBS = receitaAtividade*baseCredito*(ibsV/100)*ibsFrac;
     const cbsLiquido = Math.max(0, cbsBruto-creditoCBS);
     const ibsLiquido = Math.max(0, ibsBruto-creditoIBS);
     const totalHibrido = dasHibrido + cbsLiquido + ibsLiquido;
 
-    return {tipo:a.tipo, efetiva, receitaAtividade, dasValor, parcelaPC, parcelaConsumo, parcelaResto, dasHibrido, cbsBruto, ibsBruto, cbsLiquido, ibsLiquido, totalHibrido, creditoAoClientePuro};
+    return {tipo:a.tipo, efetiva, receitaAtividade, dasValor, parcelaPC, parcelaConsumo, parcelaResto, dasHibrido, cbsBruto, ibsBruto, creditoCBS, creditoIBS, cbsLiquido, ibsLiquido, totalHibrido, creditoAoClientePuro};
   }
 
   function computeEmpresaAno(y, atividades, ctx){
-    const {rbtV, cbsV, ibsV, anoIbsStart, fatorSimplesPuroPct} = ctx;
-    const agr = {dasValor:0, parcelaPC:0, parcelaICMS:0, parcelaISS:0, parcelaResto:0, dasHibrido:0, cbsBruto:0, ibsBruto:0, cbsLiquido:0, ibsLiquido:0, totalHibrido:0, creditoAoCliente:0, creditoAoClientePuro:0, valorTotal:0, detalhes:[]};
+    const {rbtV, cbsV, ibsV, anoIbsStart} = ctx;
+    const agr = {dasValor:0, parcelaPC:0, parcelaICMS:0, parcelaISS:0, parcelaResto:0, dasHibrido:0, cbsBruto:0, ibsBruto:0, creditoCBS:0, creditoIBS:0, cbsLiquido:0, ibsLiquido:0, totalHibrido:0, creditoAoCliente:0, creditoAoClientePuro:0, valorTotal:0, detalhes:[]};
     atividades.forEach(at=>{
       const receitaAtividade = at.valor;
-      const r = computeAtividadeAno(at.anexo, rbtV, receitaAtividade, at.setor, at.insumos, at.fornecedorRegular, fatorSimplesPuroPct, y, cbsV, ibsV, anoIbsStart);
+      const r = computeAtividadeAno(at.anexo, rbtV, receitaAtividade, at.setor, at.insumos, at.fornecedorHibrido, y, cbsV, ibsV, anoIbsStart);
       agr.valorTotal += receitaAtividade;
       agr.dasValor += r.dasValor;
       agr.parcelaPC += r.parcelaPC;
@@ -576,6 +596,8 @@
       agr.dasHibrido += r.dasHibrido;
       agr.cbsBruto += r.cbsBruto;
       agr.ibsBruto += r.ibsBruto;
+      agr.creditoCBS += r.creditoCBS;
+      agr.creditoIBS += r.creditoIBS;
       agr.cbsLiquido += r.cbsLiquido;
       agr.ibsLiquido += r.ibsLiquido;
       agr.creditoAoClientePuro += r.creditoAoClientePuro;
@@ -611,11 +633,10 @@
   }
 
   function recalcular(){
-    const rbtV = parseFloat(rbt12.value)||0;
+    const rbtV = parseBRNumber(rbt12.value);
     const cbsV = parseFloat(cbsRef.value)||0;
     const ibsV = parseFloat(ibsRef.value)||0;
     const anoIbsStart = parseInt(anoIbs.value,10)||2029;
-    const fatorSimplesPuroPct = parseFloat(fatorSimplesPuro.value)||0;
     const y = parseInt(ano.value,10);
 
     const atividades = lerAtividades();
@@ -624,7 +645,7 @@
     somaInfo.textContent = atividades.length>1 ? `${atividades.length} atividades somando ${fmtBRL(valorV)}` : '';
     somaInfo.className = 'soma-info';
 
-    const ctx = {rbtV, cbsV, ibsV, anoIbsStart, fatorSimplesPuroPct};
+    const ctx = {rbtV, cbsV, ibsV, anoIbsStart};
     const r = computeEmpresaAno(y, atividades, ctx);
 
     // legendas por atividade (alíquota efetiva de cada uma)
@@ -653,8 +674,8 @@
     hibridoPct.textContent = `Equivale a ${(r.totalHibrido/valorV*100 || 0).toFixed(2)}% da receita do mês.`;
     hibridoBody.innerHTML = `
       <tr><td>DAS remanescente</td><td class="num">${fmtBRL(r.dasHibrido)}</td></tr>
-      <tr><td>CBS (bruto ${fmtBRL(r.cbsBruto)} − crédito)</td><td class="num">${fmtBRL(r.cbsLiquido)}</td></tr>
-      <tr><td>IBS (bruto ${fmtBRL(r.ibsBruto)} − crédito)</td><td class="num">${fmtBRL(r.ibsLiquido)}</td></tr>
+      <tr><td>CBS (bruto ${fmtBRL(r.cbsBruto)} − crédito ${fmtBRL(r.creditoCBS)})</td><td class="num">${fmtBRL(r.cbsLiquido)}</td></tr>
+      <tr><td>IBS (bruto ${fmtBRL(r.ibsBruto)} − crédito ${fmtBRL(r.creditoIBS)})</td><td class="num">${fmtBRL(r.ibsLiquido)}</td></tr>
       <tr class="total"><td>Total híbrido</td><td class="num">${fmtBRL(r.totalHibrido)}</td></tr>`;
     creditoCliente.textContent = `Crédito de CBS/IBS repassado ao cliente: ${fmtBRL(r.creditoAoCliente)}.`;
 
@@ -688,14 +709,15 @@
     }
   }
 
-  [rbt12, cbsRef, ibsRef, anoIbs, fatorSimplesPuro, ano].forEach(n=>{
+  [rbt12, cbsRef, ibsRef, anoIbs, ano].forEach(n=>{
     n.addEventListener('input', recalcular);
     n.addEventListener('change', recalcular);
   });
+  attachCurrencyMask(rbt12);
 
   // atividades iniciais: comércio (mais crédito) + serviço (menos crédito)
-  atividadesContainer.appendChild(criarLinhaAtividade({anexo:'I', valor:30000, setor:'0', insumos:35, fornecedorRegular:75}));
-  atividadesContainer.appendChild(criarLinhaAtividade({anexo:'III', valor:20000, setor:'0', insumos:10, fornecedorRegular:50}));
+  atividadesContainer.appendChild(criarLinhaAtividade({anexo:'I', valor:30000, setor:'0', insumos:35, fornecedorHibrido:75}));
+  atividadesContainer.appendChild(criarLinhaAtividade({anexo:'III', valor:20000, setor:'0', insumos:15, fornecedorHibrido:50}));
   atualizarBotoesRemover();
 
   buildChart();
@@ -710,7 +732,7 @@
     const atividades = lerAtividades();
     const valorTotal = atividades.reduce((s,a)=>s+a.valor,0);
     const resumoAtividades = atividades.map(a=>`${ANEXOS[a.anexo].label.replace(/^Anexo [IV]+ — /,'')} (${fmtBRL(a.valor)})`).join(' + ');
-    printMeta.innerHTML = `Impresso em ${dataStr} · ${resumoAtividades} · RBT12: ${fmtBRL(parseFloat(rbt12.value)||0)} · Receita do mês: ${fmtBRL(valorTotal)} · Ano simulado: ${ano.value} · Simulação de caráter educativo — não é orientação contábil, fiscal ou jurídica.`;
+    printMeta.innerHTML = `Impresso em ${dataStr} · ${resumoAtividades} · RBT12: ${fmtBRL(parseBRNumber(rbt12.value))} · Receita do mês: ${fmtBRL(valorTotal)} · Ano simulado: ${ano.value} · Simulação de caráter educativo — não é orientação contábil, fiscal ou jurídica.`;
   }
   printBtn.addEventListener('click', ()=>{ montarResumoImpressao(); window.print(); });
   window.addEventListener('beforeprint', montarResumoImpressao);

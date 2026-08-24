@@ -66,6 +66,9 @@
   input:focus-visible,select:focus-visible{outline:2px solid var(--brand-green);outline-offset:2px;}
   select{cursor:pointer;}
   .readout{font-family:'IBM Plex Mono',monospace;font-size:15px;padding:4px 2px 8px;border-bottom:1px dashed var(--ink-soft);color:var(--ink-soft);}
+  .currency-wrap{display:flex;align-items:baseline;gap:6px;border-bottom:1px solid var(--ink);}
+  .currency-wrap .currency-prefix{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink-soft);padding-bottom:8px;}
+  .currency-wrap input{border-bottom:none;flex:1;min-width:0;}
 
   /* ---------- Atividades (múltiplas) ---------- */
   .atividade-block{border-bottom:2px solid var(--rule);}
@@ -244,7 +247,10 @@
       <div class="ledger-row">
         <div class="field">
           <label for="rbt12">Receita bruta últimos 12 meses — RBT12 (R$)</label>
-          <input type="number" id="rbt12" value="600000" min="0" step="1000">
+          <div class="currency-wrap">
+            <span class="currency-prefix">R$</span>
+            <input type="text" inputmode="decimal" id="rbt12" value="600000">
+          </div>
           <div class="hint">Soma de todas as atividades — define a faixa de cada anexo.</div>
         </div>
         <div class="field">
@@ -416,6 +422,23 @@
   function fmtPct(v){ return v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'; }
   function fmtBRL(v){ return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 
+  // ---- campos monetários (RBT12, receita por atividade): texto com máscara pt-BR ----
+  function parseBRNumber(str){
+    if(!str) return 0;
+    let s = String(str).replace(/[^\d,.-]/g,'');
+    s = s.replace(/\./g,'').replace(',', '.');
+    const v = parseFloat(s);
+    return isNaN(v) ? 0 : v;
+  }
+  function formatBRNumber(v){
+    return (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  function attachCurrencyMask(input){
+    input.value = formatBRNumber(parseBRNumber(input.value));
+    input.addEventListener('blur', ()=>{ input.value = formatBRNumber(parseBRNumber(input.value)); });
+    input.addEventListener('focus', ()=>{ input.select(); });
+  }
+
   function faixaInfo(anexoKey, rbt){
     const a = ANEXOS[anexoKey];
     for(const f of a.faixas){ if(rbt<=f[0]) return f; }
@@ -467,7 +490,10 @@
         </div>
         <div class="field">
           <label>Receita no mês (R$)</label>
-          <input type="number" class="af-valor" value="${valor}" min="0" step="100">
+          <div class="currency-wrap">
+            <span class="currency-prefix">R$</span>
+            <input type="text" inputmode="decimal" class="af-valor" value="${valor}">
+          </div>
         </div>
         <div class="field">
           <label>Setor (redução CBS/IBS)</label>
@@ -491,6 +517,7 @@
       </div>`;
     block.querySelector('.af-anexo').value = anexo;
     block.querySelector('.af-setor').value = setor;
+    attachCurrencyMask(block.querySelector('.af-valor'));
     block.querySelectorAll('input,select').forEach(elm=>{
       elm.addEventListener('input', recalcular);
       elm.addEventListener('change', recalcular);
@@ -506,7 +533,7 @@
   function lerAtividades(){
     return Array.from(atividadesContainer.querySelectorAll('.atividade-block')).map(block=>({
       anexo: block.querySelector('.af-anexo').value,
-      valor: parseFloat(block.querySelector('.af-valor').value)||0,
+      valor: parseBRNumber(block.querySelector('.af-valor').value),
       setor: parseFloat(block.querySelector('.af-setor').value)||0,
       insumos: parseFloat(block.querySelector('.af-insumos').value)||0,
       fornecedorHibrido: parseFloat(block.querySelector('.af-fornecedor').value)||0,
@@ -606,7 +633,7 @@
   }
 
   function recalcular(){
-    const rbtV = parseFloat(rbt12.value)||0;
+    const rbtV = parseBRNumber(rbt12.value);
     const cbsV = parseFloat(cbsRef.value)||0;
     const ibsV = parseFloat(ibsRef.value)||0;
     const anoIbsStart = parseInt(anoIbs.value,10)||2029;
@@ -686,6 +713,7 @@
     n.addEventListener('input', recalcular);
     n.addEventListener('change', recalcular);
   });
+  attachCurrencyMask(rbt12);
 
   // atividades iniciais: comércio (mais crédito) + serviço (menos crédito)
   atividadesContainer.appendChild(criarLinhaAtividade({anexo:'I', valor:30000, setor:'0', insumos:35, fornecedorHibrido:75}));
@@ -704,7 +732,7 @@
     const atividades = lerAtividades();
     const valorTotal = atividades.reduce((s,a)=>s+a.valor,0);
     const resumoAtividades = atividades.map(a=>`${ANEXOS[a.anexo].label.replace(/^Anexo [IV]+ — /,'')} (${fmtBRL(a.valor)})`).join(' + ');
-    printMeta.innerHTML = `Impresso em ${dataStr} · ${resumoAtividades} · RBT12: ${fmtBRL(parseFloat(rbt12.value)||0)} · Receita do mês: ${fmtBRL(valorTotal)} · Ano simulado: ${ano.value} · Simulação de caráter educativo — não é orientação contábil, fiscal ou jurídica.`;
+    printMeta.innerHTML = `Impresso em ${dataStr} · ${resumoAtividades} · RBT12: ${fmtBRL(parseBRNumber(rbt12.value))} · Receita do mês: ${fmtBRL(valorTotal)} · Ano simulado: ${ano.value} · Simulação de caráter educativo — não é orientação contábil, fiscal ou jurídica.`;
   }
   printBtn.addEventListener('click', ()=>{ montarResumoImpressao(); window.print(); });
   window.addEventListener('beforeprint', montarResumoImpressao);
